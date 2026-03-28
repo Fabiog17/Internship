@@ -116,24 +116,7 @@ def alignSequenceToHMM(sequence,hmmFile):
     
     # Align the pdbSequence to the HMM
     Bio.SeqIO.write(Bio.SeqRecord.SeqRecord(Bio.Seq.Seq(sequence),'tmp','tmp'),'__tmpFasta.fasta','fasta')
-    hmmFile_wsl = win_to_wsl_path(hmmFile)
-    fasta_wsl = win_to_wsl_path("__tmpFasta.fasta")
-    # print("WSL HMM path:", hmmFile_wsl)
-    # print("WSL FASTA path:", fasta_wsl)
-
-    result = subprocess.run(
-    ["wsl", "hmmalign", hmmFile_wsl, fasta_wsl],
-    capture_output=True,
-    text=True)
-
-    print("STDERR:", result.stderr)
-
-    if result.returncode != 0:
-        raise RuntimeError("hmmalign failed")
-
-    out = result.stdout.encode().splitlines()
-    
-    #out=subprocess.check_output(["wsl", "hmmalign", hmmFile_wsl, fasta_wsl]).splitlines()
+    out=subprocess.check_output(["hmmalign",hmmFile,'__tmpFasta.fasta']).splitlines()
     os.remove('__tmpFasta.fasta')
     rawMap=''
     gapMap=''
@@ -398,7 +381,23 @@ def do_DCA(msa_fasta):
     writedlm("scores.csv", X.score, ',')
     """
 
-    subprocess.run(["julia", "-e", julia_code])
+    # subprocess.run(["julia", "-e", julia_code])
+
+    result = subprocess.run(
+        ["julia", "-e", julia_code],
+        capture_output=True,
+        text=True
+    )
+
+    # Filter output
+    for line in result.stdout.splitlines():
+        if (
+            "Original number of sequences" in line or
+            "Sequences after filtering" in line or
+            "Filtered sequences saved" in line or
+            "removing duplicate sequences" in line
+        ):
+            print(line)
 
     data = np.loadtxt("scores.csv", delimiter=",")
     # data columns: i, j, score
