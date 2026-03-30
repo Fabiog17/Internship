@@ -245,7 +245,7 @@ def mapPDBToHMM(pdbFile, chainIds, hmmFile1, hmmFile2,mapFile,distType='all'):
                 if chainId in structure[0]:
                     chain_res = [res for res in structure[0][chainId] if Polypeptide.is_aa(res, standard=True)]
                 else:
-                    print(f"Chain {chainId} not found in structure")
+                    raise ValueError(f"Chain {chainId} not found in structure")
                     available_chains = [c.id for c in structure[0].get_chains()]
                     print(f"Available chains: {available_chains}")
                     print(f"Mapping chain {available_chains[0]} instead of {chainId}")
@@ -357,7 +357,7 @@ def filterSequenceByGapContent(inMSA,gapThreshold,filteredMSA,verbose=True):
         print("Original number of sequences ",len(sequences))
         print("Sequences after filtering : ",len(filteredSequences))
         print("Filtered sequences saved to ",filteredMSA)
-
+    return len(filteredSequences)
 
 
 def get_pfam_msa(pfam_acc: str, kind: str = "seed") -> bytes:
@@ -384,20 +384,17 @@ def do_DCA(msa_fasta):
     # subprocess.run(["julia", "-e", julia_code])
 
     result = subprocess.run(
-        ["julia", "-e", julia_code],
-        capture_output=True,
-        text=True
-    )
+        ["julia", "-e", julia_code])
 
-    # Filter output
-    for line in result.stdout.splitlines():
-        if (
-            "Original number of sequences" in line or
-            "Sequences after filtering" in line or
-            "Filtered sequences saved" in line or
-            "removing duplicate sequences" in line
-        ):
-            print(line)
+    # # Filter output
+    # for line in result.stdout.splitlines():
+    #     if (
+    #         "Original number of sequences" in line or
+    #         "Sequences after filtering" in line or
+    #         "Filtered sequences saved" in line or
+    #         "removing duplicate sequences" in line
+    #     ):
+    #         print(line)
 
     data = np.loadtxt("scores.csv", delimiter=",")
     # data columns: i, j, score
