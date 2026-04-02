@@ -81,6 +81,60 @@ def mapPDBToSequence(pdbFile, chainId, sequence1, seq1Mapping, mapFile):
     return distanceMap, pdb_seq, residues_filtered  
 
 
+def distance_map_PDB(pdbFile, chainId, mapFile):
+    """ Take a PDB chain ans compute residue distance map.
+        Only standard amino-acid residues (ATOM records) are used; HETATM/ions are skipped.
+    """
+
+    # parse structure (suppress warnings)
+    parser = PDBParser(QUIET=True)
+    structure = parser.get_structure('structure', pdbFile)
+    model = structure[0]
+
+    # find the chain
+    if chainId not in [c.id for c in model]:
+        raise ValueError(f"Chain {chainId} not found in PDB")
+    chain = model[chainId]
+
+    # keep only standard amino-acids (this excludes HETATM/ions/waters)
+    residues_filtered = []
+    seq_letters = []
+    for res in chain:
+        if Polypeptide.is_aa(res, standard=True):
+            # convert three-letter name to one-letter safely
+            try:
+                aa = Polypeptide.protein_letters_3to1[res.get_resname()]     #if we use a newer version on biophyton
+                #aa = Polypeptide.three_to_one(res.get_resname())
+            except Exception:
+                # skip non-standard / unusual residue names if any
+                continue
+            residues_filtered.append(res)
+            seq_letters.append(aa)
+
+    if len(residues_filtered) == 0:
+        raise ValueError("No standard amino-acid residues found on chain " + chainId)
+
+    
+    # compute distance map (minimal atom-atom distance between residues)
+    n = len(residues_filtered)
+    distanceMap = np.zeros((n, n), dtype=float)
+    for i, res1 in enumerate(residues_filtered):
+        atoms1 = np.array([a.get_coord() for a in res1.get_atoms()])
+        for j, res2 in enumerate(residues_filtered):
+            atoms2 = np.array([a.get_coord() for a in res2.get_atoms()])
+            if atoms1.size == 0 or atoms2.size == 0:
+                distanceMap[i, j] = np.inf
+            else:
+                distanceMap[i, j] = cdist(atoms1, atoms2).min()
+
+    # Save output map if requested
+    if mapFile != 'None':
+        np.savetxt(mapFile, distanceMap, fmt='%.2f')
+
+    return distanceMap, residues_filtered  
+
+
+
 
 
 def win_to_wsl_path(path):
