@@ -300,11 +300,6 @@ def mapPDBToHMM(pdbFile, chainIds, hmmFile1, hmmFile2,mapFile,distType='all'):
                     chain_res = [res for res in structure[0][chainId] if Polypeptide.is_aa(res, standard=True)]
                 else:
                     raise ValueError(f"Chain {chainId} not found in structure")
-                    available_chains = [c.id for c in structure[0].get_chains()]
-                    print(f"Available chains: {available_chains}")
-                    print(f"Mapping chain {available_chains[0]} instead of {chainId}")
-                    print("CHECK THE MATCH WITH THE HMM SEQUENCE")
-                    chain_res = [res for res in structure[0][available_chains[0]] if Polypeptide.is_aa(res, standard=True)]
                 d = len(chain_res)
                 pdbSeqs.append(catPdbSeq[currentLength:currentLength + d])
                 currentLength += d
