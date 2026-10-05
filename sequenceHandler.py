@@ -334,13 +334,23 @@ def mapPDBToHMM(pdbFile, chainIds, hmmFile1, hmmFile2,mapFile,distType='all'):
         np.savetxt(mapFile,dm,fmt='%.2f')
 
     aligned_sequence=[]
+    # for element in mi:
+    #     if int(element) == 0:
+    #         raise RuntimeError("There is a problem on the mapping between pdb and hmm")
+    #     elif int(element) == -1:
+    #         aligned_sequence.append("-")
+    #     else:
+    #         aligned_sequence.append(pdbSeqs[0][int(element)-1])
+
+    aligned_sequence = []
+
     for element in mi:
-        if int(element) == 0:
-            raise RuntimeError("There is a problem on the mapping between pdb and hmm")
-        elif int(element) == -1:
+        element = int(element)
+
+        if element == -1:
             aligned_sequence.append("-")
         else:
-            aligned_sequence.append(pdbSeqs[0][int(element)-1])
+            aligned_sequence.append(pdbSeqs[0][element])
 
     return dm,mi,aligned_sequence
 
